@@ -30,7 +30,7 @@ gh pr view <n> --json mergeable,mergeStateStatus -q '.mergeable+" "+.mergeStateS
 ⚠️ **Read `go test`'s own result, and read ALL of it.** A wrapper can exit 0 while the suite under
 it failed — and **filtering the output by exclusion is not a pass signal either.**
 
-⚠️ **Dated 2026-08-31, recorded in FPL-Armband `14446dc9`'s own commit body.** A build agent piped
+⚠️ **Dated 2026-08-31, recorded in an FPL-Armband commit body (the hash cited here before was not a real object).** A build agent piped
 `go test ./...` through **`grep -v '^ok' | head -40`**. The exclusion filter stripped the passing
 lines, and forty lines of remaining stderr pushed the `FAIL` lines past the cut — so it reported the
 suite clean **twice, over several commits**, hiding the same two real failures: a fingerprint-path
@@ -118,7 +118,7 @@ does **not** fall through and a wait loop built on it exits immediately reportin
 ## 4. Merge the vault twin — "merge one, merge the other"
 
 ```bash
-git -C /work/drop/vault merge --no-ff <branch> -m "<subject>
+git -C <vault> merge --no-ff <branch> -m "<subject>
 
 <why, and what the fpl side landed as>"
 ```

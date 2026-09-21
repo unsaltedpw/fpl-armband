@@ -70,7 +70,7 @@ withdrawing it, and date it. Then check the correction actually landed everywher
       three lines after the retraction.
 - [ ] **Inbound wikilinks after a rename.** Two notes were left pointing at a filename that no
       longer existed. Nothing in the vault checks a link:
-      `grep -rl "\[\[<old-name>\]\]" /work/drop/vault`
+      `grep -rl "\[\[<old-name>\]\]" <vault>`
 - [ ] **The repo, if the claim reached it.** A squash commit message cannot be rewritten. Put the
       correction in the code's own header comment instead — with figures regenerable from a fresh
       checkout, never sourced from the vault.
@@ -96,7 +96,7 @@ headers carrying `see the vault note "<title>"`. **Do not propose deleting those
 What may never cross:
 
 - **A machine path — and the store's own LOCATION. Name it; never locate it.** `/home/<user>/…`,
-  `/Users/<user>/…`, `/work/drop/vault`, `/work/drop/vault-worktrees/<branch>`. The user's 2026-08-21
+  `/Users/<user>/…`, `<vault-mount>/vault`, `<vault-mount>/vault-worktrees/<branch>`. The user's 2026-08-21
   ruling was "no VM path in the public repo", and the store's path is a VM path. Tracked files may
   name `~/.claude/bin/research-worktree` and nothing more locating than that.
 - **A store reference on a USER-FACING surface.** `AGENTS.md`'s permission covers agent-facing files
