@@ -105,6 +105,23 @@ jobs:
           # image under emulation would treble the build time for nothing.
           platforms: linux/amd64
           tags: ${{ steps.meta.outputs.tags }}
+          # The image says which commit it was built from, in its own config.
+          # Tags already name the commit, but a tag lives in the registry and
+          # can be repointed or deleted; a running pod carries only a digest.
+          # With this label, anything holding just that digest -- a deploy
+          # loop confirming that the merged commit is the one running on the
+          # cluster -- can read the commit back out of the image instead of
+          # searching the registry for a tag that resolves to it.
+          #
+          # Deterministic per commit, so it keeps the reproducibility this
+          # job's SOURCE_DATE_EPOCH and rewrite-timestamp settings are for:
+          # two builds of one commit still produce one digest. Set here rather
+          # than as a Dockerfile LABEL because the commit is only known to the
+          # workflow. Passed as a `with:` input, not interpolated into a shell,
+          # so the rule on the meta step above does not apply.
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
           cache-from: type=gha
           # mode=min, not max: mode=max exports every intermediate layer into the
           # repo-wide 10 GB Actions cache, which is LRU and shared with the season
