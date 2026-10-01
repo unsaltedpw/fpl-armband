@@ -13,7 +13,7 @@ landing sequence and the footguns in it — nothing more.
 
 ⚠️ **§4 is the one retired condition deliberately carried** — `merge-gate` row 12,
 *"the paired branch for this work, where one exists, merges in the same sitting"* — because
-`~/.claude/CLAUDE.md` mandates it independently of any review ritual. **Do not delete §4 as a
+the vault's own `README.md` mandates it independently of any review ritual. **Do not delete §4 as a
 rebuilt condition.**
 
 **The unit of work is a worktree PAIR: an fpl branch and a vault branch of the same name.** Landing

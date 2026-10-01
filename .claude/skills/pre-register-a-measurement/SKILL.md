@@ -6,8 +6,8 @@ description: Write and commit a pre-registration before running a measurement â€
 # Pre-registering a measurement
 
 **Write it to the vault and COMMIT IT before any number exists.** The commit timestamp is the
-evidence; a prereg written after the first look is not one. Use `templates/finding.md`'s sibling
-conventions and name the file `<date>-prereg-<question>.md`.
+evidence; a prereg written after the first look is not one. Follow the vault finding template's
+conventions (`templates/finding` in the vault) and name the file `<date>-prereg-<question>.md`.
 
 This discipline is why the in-band nulls are trustworthy. **Every place it slipped is a place the
 work had to be corrected or thrown away** â€” the incidents below are all real.

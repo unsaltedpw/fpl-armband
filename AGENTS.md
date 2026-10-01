@@ -1,41 +1,38 @@
-# Project context for Claude Code
+# Agent rules for fpl-armband
 
-A Go CLI that scores Fantasy Premier League players with a quantitative model, with a Claude
-agent on top to reason over the output. Read [docs/architecture.md](docs/architecture.md) before
-changing code and [docs/model.md](docs/model.md) before changing the scoring.
-[docs/README.md](docs/README.md) maps the rest.
+[README.md](README.md) says what `armband` is and how to build, run and test it. Read
+[docs/architecture.md](docs/architecture.md) before changing code and [docs/model.md](docs/model.md)
+before changing the scoring; [docs/README.md](docs/README.md) maps the rest. Everything in `docs/`
+is **reference** — what the system *is*. Design proposals and research notes do not belong there.
 
-Everything in `docs/` is **reference** — what the system *is*, written for a reader of the
-repository. Design proposals and research notes do not belong there.
+This file holds the rules an agent would otherwise get wrong here, and the project's **research
+memory**: one line per verdict, closed line and shipped bug. The evidence behind them lives in the
+**research vault**, the private Obsidian store reached through `~/.claude/bin/research-worktree`;
+how to read and write it — worktree pairs, merging, retiring them — is in the vault's own
+`README.md`. The `→ **name**` at the end of an entry names the note that carries it
+(`notes/<name>.md` unless it says otherwise). "Closed lines" and "What has been measured" are
+therefore **named lists** — titles and pointers, deliberately not verdicts restated. **If an entry
+seems too short to act on, read the note it points at before rebuilding anything.** Three things in
+the tree are also evidence: `stats/findings/` holds a narrative and a pre-registration per run,
+`stats/cells/` holds the banked cells two R screens read as input, and `stats/snapshots/` holds
+one-off sweep evidence for closed findings.
 
-This file holds the **rules and pointers**: build and test commands, code conventions, the
-standing rules that keep the next measurement honest, and pointers to everything else. The
-verdicts themselves — the findings, the evidence, the numbers — live in the **research
-vault**, the private Obsidian store reached through `~/.claude/bin/research-worktree`; the
-`→ **name**` at the end of an entry names the note that carries it (`notes/<name>.md` unless it
-says otherwise). "Closed lines" and "What has been measured" are therefore **named lists** —
-titles and pointers, deliberately not verdicts restated: every session starts at the store's
-index.md, so a title plus a pointer routes a reader to the verdict, which a repo with no second
-store could never do. The user-facing docs never reference the vault; this file and the other
-agent-facing surfaces may. Three things in the tree are also evidence: `stats/findings/` holds a
-narrative and a pre-registration per run, `stats/cells/` holds the banked cells two R screens
-read as input, and `stats/snapshots/` holds one-off sweep evidence for closed findings.
+**The arrow between repo and vault runs one way.** The user-facing docs never reference the vault;
+this file and the other agent-facing surfaces may. ⚠️ Do not add a machine path to a tracked file —
+`/home/<user>/…`, or the vault's own location; `~/.claude/bin/research-worktree` is as locating as
+it gets. The tree is not clean of them yet: several `internal/backtest/*_diag_test.go` diagnostics
+and two `stats/*.R` scripts still hardcode dated output directories at an absolute machine path,
+which is an open work item, not a precedent. ⚠️ A claim sourced only in the vault may not appear
+in a commit message, review record or code comment: it must be re-derivable from a fresh checkout.
+The `close-out-a-finding` skill has the detail.
 
-⚠️ **The ACCURACY series is no longer committed here, as of 2026-08-22.** It publishes as a
-GitHub Release asset on every push to `main` (`.github/workflows/snapshot.yml`), never as a
-tracked directory — see that workflow's own comment for why, and
-`internal/snapshot`'s `TestSnapshotCoversTheCurrentCode` for the guard that used to require the
-commit. **The published series is not a citable record**: nothing in this repository may point
-at it, for the same reason `stats/snapshots/` itself could never be cited directly — see the
-retired-location guard. A figure a comment needs stated has to be inlined at the citing site,
-not pointed at a release. What remains under `stats/snapshots/` is the older, pre-2026-08-22
-evidence directories that predate this split and the odd one-off sweep since — check a
-directory's own files before assuming it is either kind.
-
-⚠️ **The 2026-08-17 compaction moved derivation narratives out of this file, and the 2026-08-19
-cut moved the verdicts after them — titles and pointers stay resident, derivations and verdict
-bodies do not.** If an entry seems too short to act on, read the note it points at before
-rebuilding anything.
+⚠️ **The ACCURACY series is not committed.** It publishes as a GitHub Release asset on every push
+to `main` (`.github/workflows/snapshot.yml` says why), and **the published series is not a citable
+record**: nothing in this repository may point at it, for the same reason `stats/snapshots/` itself
+could never be cited directly — see the retired-location guard. A figure a comment needs stated has
+to be inlined at the citing site, not pointed at a release. `stats/snapshots/` still holds the
+evidence directories from before 2026-08-22 and the odd one-off sweep since — check a directory's
+own files before assuming which kind it is.
 
 ## Build and test
 
@@ -43,76 +40,49 @@ rebuilding anything.
 go build ./... && go vet ./... && go test ./<package you touched>/...
 ```
 
-Build and vet run over the whole module — they are fast and catch a break anywhere. **Test locally
-scoped to the package or two you actually touched; the full suite is CI's job**, on every push and
-every pull request (`.github/workflows/ci.yml`).
+Build and vet the whole module — they are fast and catch a break anywhere. **Test locally scoped to
+the package or two you actually touched; the full suite is CI's job**, on every push and every pull
+request (`.github/workflows/ci.yml`). Go's own test cache already re-runs what a change reaches,
+including the cross-package source scans an import graph cannot see, so do not build a tool that
+derives test scope (a closed line, below). Touching `config.json`, an `FPL_*` var, or `stats/*.R`
+also needs `go test -count=1 ./internal/snapshot/...`. How the tests behave — live FPL API, skipped
+when unreachable, invariants rather than exact values — is in [README.md](README.md#testing).
 
-**Do not build a tool that derives test scope from the import graph.** That was built, measured
-and deleted on 2026-08-19: Go's own test cache already re-runs the packages a change reaches — the
-changed package, everything importing it, and anything whose tests *open* a changed file within
-the module, which is `go help test`'s own boundary — and that reaches cross-package source scans
-an import graph cannot see, which is exactly where the cross-cutting guards in `internal/snapshot`
-live. **This is a practice, not automation**: run the scoped command above while you work, and let
-CI be the full answer. Touching `config.json`, an `FPL_*` var, or `stats/*.R` also needs
-`go test -count=1 ./internal/snapshot/...`.
+**Language server:** `gopls` for Go — use it for definitions, references and diagnostics before
+grepping or reading whole files.
 
 ⚠️ **A suite that re-runs everything every time is the symptom of a FULL DISK, and so are browser
-tests that fail LOCALLY on a screenshot write.** Go declines to cache a result it cannot write,
-silently. Observed 2026-08-19: several sessions running the suite at once took `/` to **100%, 61 MB
-free of 58 GB** — 27 GB of it in `$(go env GOCACHE)` — and in that state a run died on `no space
-left on device` writing `testlog.txt`, `internal/webui` reported eleven `TestLayout` failures that
-were the browser unable to write a screenshot, and `internal/backtest` alternated cached and not
-with nothing changed. It drained to 26 GB free within the hour, so **it is contention, not a
-standing state**: check `df -h /` before believing a red run, and `go clean -cache` if it is not
-draining.
+tests that fail LOCALLY on a screenshot write.** Go declines, silently, to cache a result it cannot
+write. Several sessions running the suite at once have filled `/` before, most of it in
+`$(go env GOCACHE)`; it drained within the hour, so it is contention, not a standing state. Check
+`df -h /` before believing a red run, and `go clean -cache` if it is not draining. →
+**work/ruled-out/scope-the-test-run-and-move-the-suite-to-ci**
 
-⚠️ **CI's `TestLayout` redness on `main` (six subtests, machine-dependent goldens, worst channel
-delta 2 of 255, since 2026-08-19) is fixed as of `97c941c`** — it is skipped in CI now, not green
-by repair; `FPL_LAYOUT_GOLDENS=1` forces it back on for anyone who wants to look, and see the
-standing exception below for when you owe it a local run instead. **Do not read this paragraph as
-"CI is clean," and do not trust its own claim without checking `gh run list` first — this project's
-CI state has already gone stale under one written description of it inside a single day.**
-**`main` is GREEN as of 2026-08-26 (`d6b23b6`, three consecutive green CI runs); anything red on
-your branch is yours.** The `TestEnvSwitchListIsComplete` failure this paragraph used to
-describe was fixed by `a865952e`
-ten minutes after the commit that caused it — `FPL_LAYOUT_GOLDENS` is registered at
-`internal/snapshot/fingerprint_test.go:145` and the test passes. That text survived five days
-and two sessions read it as current — the failure this paragraph warns about, happening to the
-paragraph itself.
+⚠️ **`TestLayout`, the layout goldens, is skipped in CI by decision** (it detects `GITHUB_ACTIONS`
+in `internal/webui/visual_test.go`): its goldens are machine-dependent, so CI there would be red on
+a renderer difference rather than a visual change. `FPL_LAYOUT_GOLDENS=1` forces it back on. So
+**a change touching `internal/webui`, or anything that feeds what it renders — `internal/viewmodel`
+and `internal/present` both do — must be run locally with `go test ./internal/webui/ -count=1`
+before it ships**: "test the package you touched" is not sufficient here, because the package that
+changed and the package that owns the goldens are not always the same one. ⚠️ A machine with no
+`chromium` on `PATH` skips the suite too, and a skip is not a pass. Delete this paragraph only
+together with the CI skip. → **work/landed/machine-dependent-visual-goldens-keep-ci-red**
 
-⚠️ **Standing exception, until the goldens defect above is fixed: run the layout goldens locally
-yourself, because CI cannot see them.** A companion change skips `TestLayout` in CI (detecting
-`GITHUB_ACTIONS`) so the red check above stops being the default state a reviewer has to explain
-away on every PR; locally the goldens still render and compare, which is where they have actually
-caught regressions. `FPL_LAYOUT_GOLDENS=1` forces them back on in CI, for anyone who wants to look.
-So: **a change touching `internal/webui`, or anything that feeds what it renders —
-`internal/viewmodel` and `internal/present` both do — must be run locally with
-`go test ./internal/webui/ -count=1` before it ships**, because "test the package you touched"
-above is not sufficient on its own: the package that changed and the package that owns the goldens
-are not always the same one. **This exception expires with the CI skip that motivates it** — when
-the goldens defect is fixed and the skip is deleted from `internal/webui/visual_test.go`, delete
-this paragraph with it, not before.
-
-Tests hit the live FPL API and skip when it is unreachable. They assert invariants, not exact
-values — the underlying data changes weekly, so a test pinned to a specific player or score rots
-within days.
+⚠️ **Do not trust any written description of CI's state, this file included — read the runs**
+(`gh run list`, or the repository's Actions page). This project's CI state has gone stale under its
+own description within a single day, and a stale "CI is clean" paragraph once survived five days.
 
 **A Playwright suite drives a real `armband serve` in a real browser** — `cd e2e && npm test`,
 opt-in and never part of `go test ./...`. See [docs/architecture.md](docs/architecture.md)'s `e2e/`
 section for what it asserts and why it takes no pixel comparisons.
 
-**Changes land through a pull request against `main`, checked by CI.** This retired, 2026-08-20,
-the twelve-condition `merge-gate` skill, its review-record counterpart `review-gate`, the
-`armband reviewkey` command and `TestReviewCoversTheCurrentCode` — `armband` is a product an end
-user runs, and a command that existed only to serve this project's own review ritual did not
-belong in it. Some of what `merge-gate` condition 1 did by hand — a green run of the whole suite,
-keyed to the commit, that a reader who was not there can pull by id rather than take on trust — a
-pull request now gives mechanically: CI runs on every push to a branch and every pull request, and
-the check is attached to the PR itself. Reviewers are still dispatched (self-review is forbidden
-on this project) and their findings still belong in the PR description; there is no longer a
-required `reviews/` record — the 171 records already committed stay as history. **Current
-practice: measurement work lands on `development`; other changes go through a pull request to
-`main`.**
+**Every change lands through a pull request against `main`, checked by CI.** Reviewers' findings go
+in the PR description; there is no required `reviews/` record — the records already committed there
+stay as history. ⚠️ **Do not rebuild the retired review ritual** — the `merge-gate` and
+`review-gate` skills, `armband reviewkey`, `TestReviewCoversTheCurrentCode`: `armband` is a product
+an end user runs, and a command that exists only to serve this project's own review process does not
+belong in it. The mechanical landing sequence, and its footguns, is the `land-a-unit-of-work`
+skill. → **work/landed/retire-the-review-ritual-and-move-the-full-suite-to-ci**
 
 ### Replay sweeps run through `scripts/replay`, and they run in parallel
 
@@ -120,25 +90,14 @@ practice: measurement work lands on `development`; other changes go through a pu
 EXP=G FPL_CELLS=/tmp/g.csv scripts/replay -run TestDiagTransferPolicy -v -timeout 2h
 ```
 
-`go test` flag spellings are accepted and translated for the compiled binary — they do not pass
-through to `go test`, which is not run, so a flag the binary does not know is rejected rather than
-honoured. `DIAG=1` is set for you.
-
-The wrapper compiles once under a build lock and runs the binary in a child process it waits for —
-deliberately not an `exec`, because it has to outlive the run to report the exit status and the
-peak RSS. One block measured both ways on 2026-08-11 cost 97 MB resident instead of the 1031 MB
-the `go test` driver holds, at the same speed, which is what makes parallel sweeps affordable.
-Banked sweep runs since span 89-142 MB; budget from [docs/replay.md](docs/replay.md), not from
-the 97. It adds three guard rails:
-
-- `FPL_REPLAY_SLOTS` (default 3) — extra runs *queue* rather than race.
-- A per-run memory cap set above the measured peak, so it binds only on a run that has gone wrong.
-  It exists only where a user systemd manager does; elsewhere the wrapper says so and runs uncapped.
-- An exit status you can trust. A killed sweep leaves a partial cells file that reads downstream
-  like a complete sweep with fewer arms.
-
-It prints each run's peak RSS. That is not decoration — the memory figures above hold only until
-some arm makes them false. Details in [docs/replay.md](docs/replay.md).
+The wrapper compiles once and runs the binary as a child, so `go test` flag spellings are
+translated rather than passed through — a flag the binary does not know is rejected, not honoured —
+and `DIAG=1` is set for you. Runs beyond `FPL_REPLAY_SLOTS` (default 3) *queue* rather than race;
+each run gets a memory cap set above the measured peak where a user systemd manager exists (it says
+so when it runs uncapped), and prints its peak RSS. ⚠️ **Trust its exit status, not the output**: a
+killed sweep leaves a partial cells file that reads downstream like a complete sweep with fewer
+arms. Budget memory from [docs/replay.md](docs/replay.md), which carries the measurements and the
+rest of the detail.
 
 ## Conventions
 
@@ -162,10 +121,10 @@ some arm makes them false. Details in [docs/replay.md](docs/replay.md).
 - **Gloss a Go identifier the first time a section uses it**, in four to eight words. Not every
   occurrence, just the first per section.
 - **The resident size budget** is enforced by `TestTheResidentIndexStaysSmall`. This file is
-  loaded into every session, so growth is paid for by every task. Since the 2026-08-17
-  compaction the remedy for a genuinely needed entry is still RAISE THE BUDGET and name the claim
-  — never drop a qualifier to fit, which is the failure the constant exists to prevent — but the
-  *first* question is now whether the derivation belongs in the vault and only the verdict here.
+  loaded into every session, so growth is paid for by every task. The first question for a new
+  entry is whether its derivation belongs in the vault and only the verdict here; if a needed
+  entry still does not fit, RAISE THE BUDGET and name the claim — never drop a qualifier to fit,
+  which is the failure the constant exists to prevent.
 
 ## How to read the measurements
 
@@ -267,11 +226,9 @@ it is replay documentation, needed when running a sweep, not every run. → **ar
   layer up; a scoring fix changes `Score`, therefore the ordering, therefore which footballers
   get bought.
 - **Verify on staging against real live data before promoting to production, not just `go
-  test`, for anything touching account-specific or live-API-dependent paths.** A staging
-  environment — a second copy of the app in its own namespace, in the separate ops/deployment
-  repo — went live 2026-08-22 and was used that same day to check a live-API fix this way before
-  it reached production. That class of bug had passed every test and still broken
-  `fplarmband.com` within minutes of a deploy earlier the same day.
+  test`, for anything touching account-specific or live-API-dependent paths.** Staging is a
+  second copy of the app in its own namespace, in the separate ops/deployment repo. That class of
+  bug has passed every test and still broken `fplarmband.com` within minutes of a deploy.
   ⚠️ **Verify through the SURFACE the reader uses.** Running the binary and curling the
   endpoint are not proxies for the page. On 2026-08-23 the CLI was right, `/api/transfers`
   was right, and the page rendered `plans[0]` of five — found by a person clicking the
@@ -568,13 +525,10 @@ in the vault; the lesson and the pinning test here — the test is the guard. �
 
 ## Closed lines — do not rebuild these
 
-Each was measured and lost, closed on mechanism, or withdrawn after re-measurement. **This is a
-NAMED LIST — titles and pointers — deliberately, not a verdict restated**: a bare title in a repo
-with no second store dead-ended, and this repo has one — every session starts at the store's
-index.md, and the bold name at the end of each entry is the note the evidence sits in. A title
-alone does not stop an idea being rebuilt; the pointer does not either, but a title plus a
-pointer routes a reader to the verdict, which a bare repo never could. Do not "finish the job"
-by deleting the list, and do not re-derive a verdict from a title alone.
+Each was measured and lost, closed on mechanism, or withdrawn after re-measurement. **A named
+list — titles and pointers, deliberately**: a title plus a pointer routes a reader to the verdict
+in the note the bold name points at. Do not "finish the job" by deleting the list, and do not
+re-derive a verdict from a title alone.
 
 - **Do not build a custom fixture-difficulty rating, do not target the worst defences, do not
   band attack and defence separately, and do not move the fixture window.** → **fixtures-and-difficulty**
@@ -633,7 +587,7 @@ by deleting the list, and do not re-derive a verdict from a title alone.
 - **Do not build a haul-propensity tiebreak, and do not build a minutes one: neither channel
   carries anything inside the band that `Score` has not already taken.** →
   **optimiser-and-squad**
-- **Do not scope the local test run to the packages a change touches.** Built and measured 2026-08-19: the Go test cache already does it, and better — it tracks the cross-package source scans an import graph cannot see, so a hand-derived scope skips exactly the guards this record pins its shipped bugs with. → **work/ruled-out/scope-the-test-run-and-move-the-suite-to-ci**
+- **Do not build a tool that derives the test scope.** Built and measured 2026-08-19: the Go test cache already does it, and better — it tracks the cross-package source scans an import graph cannot see, so a hand-derived scope skips exactly the guards this record pins its shipped bugs with. → **work/ruled-out/scope-the-test-run-and-move-the-suite-to-ci**
 - **Do not memoise `blankRate`.** Answer-exact and measured no faster —
   `playsAtAll` is cheaper than the cache lookup that would replace it. →
   **optimiser-and-squad**
@@ -658,11 +612,11 @@ by deleting the list, and do not re-derive a verdict from a title alone.
 
 ## What has been measured
 
-**A named list — titles and pointers.** The evidence and the numbers live in the vault notes the
-bold names point at; a verdict here cannot be checked from this checkout (never write
-"I verified" when you mean "I re-ran"), and re-measuring is still how a verdict falls — when it
-happens, the new number sits *beside* the recorded one, so say which you have. Absence
-from this list is weak evidence of absence — nothing checks it stays complete.
+**A named list — titles and pointers.** The evidence and the numbers live in the notes the bold
+names point at; a verdict here cannot be checked from this checkout (never write "I verified" when
+you mean "I re-ran"). Re-measuring is still how a verdict falls, and the new number then sits
+*beside* the recorded one, so say which you have. Absence from this list is weak evidence of
+absence — nothing checks it stays complete.
 
 ### What a player is worth: the scoring terms
 
@@ -874,9 +828,10 @@ from this list is weak evidence of absence — nothing checks it stays complete.
 
 ## Season maintenance
 
-Four things are not in the FPL API and go stale the moment the season turns over. They ship as
-dated 2026/27 defaults (`DefaultEuropeanCampaigns`, `DefaultDomesticCups`, `DefaultNewCoachClubs`,
-`DefaultRestPlayers`) and must be re-derived every summer:
+Four hand-maintained lists are not in the FPL API and must be re-derived every summer — the
+README's "What you must configure by hand" names them, and the `fpl-season-maintenance` agent does
+the work. They ship as dated 2026/27 defaults (`DefaultEuropeanCampaigns`, `DefaultDomesticCups`,
+`DefaultNewCoachClubs`, `DefaultRestPlayers`). What is easy to get wrong:
 
 - **Competition windows** per club, with start *and* end dates. `armband congestion` reports
   what is set and how stale it is.
