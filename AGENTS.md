@@ -18,11 +18,13 @@ the tree are also evidence: `stats/findings/` holds a narrative and a pre-regist
 one-off sweep evidence for closed findings.
 
 **The arrow between repo and vault runs one way.** The user-facing docs never reference the vault;
-this file and the other agent-facing surfaces may. ⚠️ No tracked file may carry a machine path —
+this file and the other agent-facing surfaces may. ⚠️ Do not add a machine path to a tracked file —
 `/home/<user>/…`, or the vault's own location; `~/.claude/bin/research-worktree` is as locating as
-it gets. ⚠️ A claim sourced only in the vault may not appear in a commit message, review record or
-code comment: it must be re-derivable from a fresh checkout. The `close-out-a-finding` skill has the
-detail.
+it gets. The tree is not clean of them yet: several `internal/backtest/*_diag_test.go` diagnostics
+and two `stats/*.R` scripts still hardcode dated output directories at an absolute machine path,
+which is an open work item, not a precedent. ⚠️ A claim sourced only in the vault may not appear
+in a commit message, review record or code comment: it must be re-derivable from a fresh checkout.
+The `close-out-a-finding` skill has the detail.
 
 ⚠️ **The ACCURACY series is not committed.** It publishes as a GitHub Release asset on every push
 to `main` (`.github/workflows/snapshot.yml` says why), and **the published series is not a citable
@@ -585,7 +587,7 @@ re-derive a verdict from a title alone.
 - **Do not build a haul-propensity tiebreak, and do not build a minutes one: neither channel
   carries anything inside the band that `Score` has not already taken.** →
   **optimiser-and-squad**
-- **Do not scope the local test run to the packages a change touches.** Built and measured 2026-08-19: the Go test cache already does it, and better — it tracks the cross-package source scans an import graph cannot see, so a hand-derived scope skips exactly the guards this record pins its shipped bugs with. → **work/ruled-out/scope-the-test-run-and-move-the-suite-to-ci**
+- **Do not build a tool that derives the test scope.** Built and measured 2026-08-19: the Go test cache already does it, and better — it tracks the cross-package source scans an import graph cannot see, so a hand-derived scope skips exactly the guards this record pins its shipped bugs with. → **work/ruled-out/scope-the-test-run-and-move-the-suite-to-ci**
 - **Do not memoise `blankRate`.** Answer-exact and measured no faster —
   `playsAtAll` is cheaper than the cache lookup that would replace it. →
   **optimiser-and-squad**
@@ -831,13 +833,15 @@ README's "What you must configure by hand" names them, and the `fpl-season-maint
 the work. They ship as dated 2026/27 defaults (`DefaultEuropeanCampaigns`, `DefaultDomesticCups`,
 `DefaultNewCoachClubs`, `DefaultRestPlayers`). What is easy to get wrong:
 
-- **Competition windows** need start *and* end dates. `armband congestion` reports what is set
-  and how stale it is; `armband nations` maps the opaque nationality codes for travel load.
+- **Competition windows** per club, with start *and* end dates. `armband congestion` reports
+  what is set and how stale it is.
 - **Managerial changes.** The test is not "is the manager new" but "was last season's data
   produced under him" — which is why Tottenham is on the list and Manchester United is not.
-- **Post-tournament rest.** Names must match the FPL spelling exactly, accents included. Two
-  regression tests fail loudly if a hand-maintained name stops resolving, because that failure is
-  otherwise silent.
+- **Post-tournament rest.** Names must match the FPL spelling exactly, accents included.
+- **Nationality code lists** for travel load — `armband nations` maps the opaque codes.
+
+Two regression tests fail loudly if a hand-maintained name stops resolving, because that failure
+is otherwise silent.
 
 **Three of the four lists are display-only, and one is live on the scoring path.**
 
