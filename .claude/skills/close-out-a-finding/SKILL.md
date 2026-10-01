@@ -6,7 +6,7 @@ description: Turn a completed measurement into a vault finding that will survive
 # Closing out a finding
 
 **Record the VERDICT, not the title.** A title alone does not stop an idea being rebuilt — that is
-the failure this store exists to prevent. Use `templates/finding.md`.
+the failure this store exists to prevent. Use the vault's finding template (`templates/finding` in the vault).
 
 Every check below is here because it caught a real error in a real note. Work the list; it is
 faster than the review round-trip.
@@ -88,7 +88,7 @@ not.
 
 ## The one-way arrow
 
-The vault may name the repo. **The repo may name this store too** — `AGENTS.md:19` says so
+The vault may name the repo. **The repo may name this store too** — `AGENTS.md`'s opening section says so
 outright: *"The user-facing docs never reference the vault; this file and the other agent-facing
 surfaces may."* Tracked lines on `origin/main` already do, including five diagnostic
 headers carrying `see the vault note "<title>"`. **Do not propose deleting those.**
